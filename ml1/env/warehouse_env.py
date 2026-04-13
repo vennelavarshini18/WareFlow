@@ -1,13 +1,4 @@
-"""
-ML1 WarehouseEnv — 15x15 Gymnasium Environment
-================================================
-The core reinforcement learning environment for warehouse robot navigation.
 
-- CNN-friendly 3-channel observation: (3, grid_size, grid_size)
-- Discrete(4) action space: Up, Down, Left, Right
-- Dense reward shaping + sparse rewards
-- Curriculum learning: Stage 1 (empty) → Stage 2 (obstacles) → Stage 3 (competing)
-"""
 
 import gymnasium as gym
 from gymnasium import spaces
@@ -23,51 +14,27 @@ from .core_classes import (
 
 
 class WarehouseEnv(gym.Env):
-    """
-    A 15x15 grid warehouse environment for training an RL agent to navigate
-    from a start position to a goal while avoiding obstacles.
-
-    Observation Space:
-        Box(0, 255, shape=(3, grid_size, grid_size), dtype=uint8)
-        Channel 0: Obstacle map (255 = obstacle cell)
-        Channel 1: Agent position (255 = agent cell)
-        Channel 2: Goal position (255 = goal cell)
-
-    Action Space:
-        Discrete(4): 0=Up, 1=Down, 2=Left, 3=Right
-
-    Rewards:
-        +δdistance * 0.1   per step (closer to goal = positive)
-        -0.01              per step (time pressure)
-        -1.0               hitting a wall (stays in place)
-        -10.0              collision with obstacle (episode ends)
-        +100.0             reaching the goal (episode ends)
-
-    Curriculum:
-        Stage 1: Empty room (agent + goal only)
-        Stage 2: Mixed obstacles (static + patrol + random_walk)
-        Stage 3: Stage 2 + competing robots (goal-seeking rivals)
-    """
+    
 
     metadata = {"render_modes": ["human", "ansi"], "render_fps": 10}
 
-    # ── Reward Constants ──────────────────────────────────────────────
+    
     REWARD_STEP_PENALTY = -0.01
-    REWARD_CLOSER_SCALE = 0.1       # multiplied by δ(manhattan distance)
+    REWARD_CLOSER_SCALE = 0.1       
     REWARD_WALL_HIT = -1.0
     REWARD_COLLISION = -10.0
     REWARD_GOAL = 100.0
-    REWARD_COMPETITOR_STEALS = -15.0   # Competing robot reaches goal first
+    REWARD_COMPETITOR_STEALS = -15.0   
 
-    # ── Episode Limits ────────────────────────────────────────────────
+    
     MAX_STEPS_PER_EPISODE = 200
 
-    # ── Obstacle Counts per Stage ─────────────────────────────────────
+    
     STAGE2_STATIC = 5
     STAGE2_PATROL = 3
     STAGE2_RANDOM = 2
 
-    # Stage 3 adds competing robots on top of Stage 2 obstacles
+    
     STAGE3_COMPETITORS = 2
 
     def __init__(self, grid_size: int = 15, render_mode: Optional[str] = None):
@@ -76,7 +43,7 @@ class WarehouseEnv(gym.Env):
         self.grid_size = grid_size
         self.render_mode = render_mode
 
-        # Gymnasium spaces
+        
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(
             low=0, high=255,
@@ -84,14 +51,18 @@ class WarehouseEnv(gym.Env):
             dtype=np.uint8,
         )
 
-        # Core entities
+        
         self.agent = Agent()
         self.goal = Goal()
         self.obstacles: List = []
 
-        # Curriculum
+        
         self.curriculum = CurriculumTracker(window_size=100, advance_threshold=0.90)
 
+<<<<<<< HEAD
+=======
+        
+>>>>>>> e89b63fe399fc0a90331a416aa573fdecf7f63b7
         self.current_step = 0
         self.episode_reward = 0.0
         self.prev_distance = 0
@@ -99,9 +70,7 @@ class WarehouseEnv(gym.Env):
         self.target_category = ""
         self.delivery_pos = (0, 0)
 
-    # ==================================================================
-    # RESET
-    # ==================================================================
+    
 
     def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
         """Reset the environment for a new episode."""
@@ -111,6 +80,7 @@ class WarehouseEnv(gym.Env):
         self.episode_reward = 0.0
         self.agent.status = "moving"
 
+<<<<<<< HEAD
         # ── Spawn obstacles based on current curriculum stage ─────────
         if not self.obstacles:
             self._spawn_obstacles()
@@ -154,8 +124,14 @@ class WarehouseEnv(gym.Env):
             occupied.add(agent_pos)
             self.agent.set_position(*agent_pos)
             self.agent_spawned = True
+=======
+        positions = self._sample_unique_positions(2)
+        self.agent.set_position(*positions[0])
+        self.goal.x, self.goal.y = positions[1]
 
-        # ── Initial distance ─────────────────────────────────────────
+        self._spawn_obstacles()
+>>>>>>> e89b63fe399fc0a90331a416aa573fdecf7f63b7
+
         self.prev_distance = self._manhattan_distance()
 
         obs = self._build_observation()
@@ -163,49 +139,44 @@ class WarehouseEnv(gym.Env):
 
         return obs, info
 
-    # ==================================================================
-    # STEP
-    # ==================================================================
+    
 
     def step(self, action: int):
-        """
-        Execute one time step.
-
-        Args:
-            action: int in {0, 1, 2, 3}
-
-        Returns:
-            observation, reward, terminated, truncated, info
-        """
+        
         self.current_step += 1
         reward = 0.0
         terminated = False
         truncated = False
 
-        # ── 1. Compute proposed new position ─────────────────────────
+        
         new_x, new_y = self.agent.move(action, self.grid_size)
 
-        # ── 2. Check wall collision (out of bounds) ──────────────────
+        
         if new_x < 0 or new_x >= self.grid_size or new_y < 0 or new_y >= self.grid_size:
             reward += self.REWARD_WALL_HIT
             self.agent.status = "blocked"
-            # Agent doesn't move, stays in place
+            
         else:
+<<<<<<< HEAD
             # ── 3. Check obstacle collision ──────────────────────────
             obstacle_positions = set()
             for obs in self.obstacles:
                 obstacle_positions.update(obs.occupied_cells)
             
+=======
+            
+            obstacle_positions = {(obs.x, obs.y) for obs in self.obstacles}
+>>>>>>> e89b63fe399fc0a90331a416aa573fdecf7f63b7
             if (new_x, new_y) in obstacle_positions:
                 reward += self.REWARD_COLLISION
                 self.agent.status = "collided"
                 terminated = True
             else:
-                # ── 4. Valid move ─────────────────────────────────────
+                
                 self.agent.set_position(new_x, new_y)
                 self.agent.status = "moving"
 
-                # ── 5. Check goal reached ────────────────────────────
+                
                 if self.agent.x == self.goal.x and self.agent.y == self.goal.y:
                     if self.route_stage == "to_shelf":
                         # Stage 1 complete! Now deliver.
@@ -219,20 +190,20 @@ class WarehouseEnv(gym.Env):
                         self.agent.status = "reached_goal"
                         terminated = True
 
-        # ── 6. Dense reward: distance shaping ────────────────────────
+        
         if not terminated:
             current_distance = self._manhattan_distance()
-            delta = self.prev_distance - current_distance  # positive if we got closer
+            delta = self.prev_distance - current_distance  
             reward += delta * self.REWARD_CLOSER_SCALE
             self.prev_distance = current_distance
 
-        # ── 7. Step penalty (time pressure) ──────────────────────────
+        
         reward += self.REWARD_STEP_PENALTY
 
-        # ── 8. Update moving obstacles ───────────────────────────────
+        
         self._update_obstacles()
 
-        # ── 9. Post-move collision check (obstacle walked into agent)
+        
         if not terminated:
             obstacle_positions_after = set()
             for obs in self.obstacles:
@@ -243,7 +214,7 @@ class WarehouseEnv(gym.Env):
                 self.agent.status = "collided"
                 terminated = True
 
-        # ── 9b. Check if a competing robot stole the goal (Stage 3)
+        
         if not terminated:
             for obs in self.obstacles:
                 if isinstance(obs, CompetingRobot) and obs.reached_goal:
@@ -252,17 +223,17 @@ class WarehouseEnv(gym.Env):
                     terminated = True
                     break
 
-        # ── 10. Truncation (max steps exceeded) ─────────────────────
+        
         if self.current_step >= self.MAX_STEPS_PER_EPISODE and not terminated:
             truncated = True
 
-        # ── 11. Track curriculum on episode end ─────────────────────
+        
         if terminated or truncated:
             success = (self.agent.status == "reached_goal")
             self.curriculum.record(success)
             self.curriculum.try_advance()
 
-        # ── 12. Accumulate reward ────────────────────────────────────
+       
         self.episode_reward += reward
 
         obs = self._build_observation()
@@ -273,18 +244,10 @@ class WarehouseEnv(gym.Env):
 
         return obs, reward, terminated, truncated, info
 
-    # ==================================================================
-    # OBSERVATION BUILDER
-    # ==================================================================
+    
 
     def _build_observation(self) -> np.ndarray:
-        """
-        Build the 3-channel CNN-friendly observation matrix.
-
-        Channel 0: Obstacles (255 where obstacle exists)
-        Channel 1: Agent    (255 at agent's cell)
-        Channel 2: Goal     (255 at goal's cell)
-        """
+        
         obs = np.zeros((3, self.grid_size, self.grid_size), dtype=np.uint8)
 
         # Channel 0: Obstacles
@@ -301,19 +264,13 @@ class WarehouseEnv(gym.Env):
 
         return obs
 
-    # ==================================================================
-    # REWARD HELPERS
-    # ==================================================================
+    
 
     def _manhattan_distance(self) -> int:
-        """Manhattan distance between agent and goal."""
         return abs(self.agent.x - self.goal.x) + abs(self.agent.y - self.goal.y)
 
     def _build_info(self) -> Dict[str, Any]:
-        """
-        Build the info dict returned alongside observations.
-        Contains metadata useful for ML2 (TensorBoard logging) and BE (WebSocket).
-        """
+        
         return {
             "stage": self.curriculum.current_stage,
             "success_rate": round(self.curriculum.success_rate, 4),
@@ -325,11 +282,10 @@ class WarehouseEnv(gym.Env):
             "total_episodes": self.curriculum.total_episodes,
         }
 
-    # ==================================================================
-    # OBSTACLE MANAGEMENT
-    # ==================================================================
+    
 
     def _spawn_obstacles(self):
+<<<<<<< HEAD
         """Populate the static warehouse shelf layout (always active)."""
         self.obstacles = []
 
@@ -362,10 +318,48 @@ class WarehouseEnv(gym.Env):
                     occupied_padded.update(padded_footprint)
                     self.obstacles.append(StaticObstacle(f"s_{shelf_id}", x, y, w=w, h=h, category=category))
                     break
+=======
+        self.obstacles = []
+
+        if self.curriculum.current_stage == 1:
+            return
+
+        if self.curriculum.current_stage >= 2:
+            occupied = {(self.agent.x, self.agent.y), (self.goal.x, self.goal.y)}
+
+            for i in range(self.STAGE2_STATIC):
+                pos = self._sample_free_position(occupied)
+                self.obstacles.append(StaticObstacle(f"s_{i}", pos[0], pos[1]))
+                occupied.add(pos)
+
+            for i in range(self.STAGE2_PATROL):
+                start = self._sample_free_position(occupied)
+                occupied.add(start)
+                waypoints = self._generate_patrol_path(start, occupied)
+                self.obstacles.append(PatrolObstacle(f"p_{i}", waypoints, speed=2))
+
+            
+            for i in range(self.STAGE2_RANDOM):
+                pos = self._sample_free_position(occupied)
+                self.obstacles.append(RandomWalkObstacle(f"r_{i}", pos[0], pos[1]))
+                occupied.add(pos)
+
+        if self.curriculum.current_stage >= 3:
+            
+            for i in range(self.STAGE3_COMPETITORS):
+                pos = self._sample_free_position(occupied)
+                self.obstacles.append(
+                    CompetingRobot(
+                        f"c_{i}", pos[0], pos[1],
+                        self.goal.x, self.goal.y,
+                        speed=3  
+                    )
+                )
+                occupied.add(pos)
+>>>>>>> e89b63fe399fc0a90331a416aa573fdecf7f63b7
 
     def _update_obstacles(self):
-        """Move all dynamic obstacles by one tick."""
-        # Build set of all occupied cells (excluding the obstacle being updated)
+        
         for obstacle in self.obstacles:
             occupied = set()
             occupied.add((self.agent.x, self.agent.y))
@@ -378,12 +372,12 @@ class WarehouseEnv(gym.Env):
     def _generate_patrol_path(
         self, start: Tuple[int, int], occupied: set
     ) -> List[Tuple[int, int]]:
-        """Generate a short patrol path (2-4 waypoints) from a starting point."""
+        
         path = [start]
         current = start
         directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
-        for _ in range(random.randint(1, 3)):  # 1-3 extra waypoints
+        for _ in range(random.randint(1, 3)):  
             random.shuffle(directions)
             moved = False
             for dx, dy in directions:
@@ -402,9 +396,9 @@ class WarehouseEnv(gym.Env):
             if not moved:
                 break
 
-        # Must have at least 2 waypoints for patrol to work
+        
         if len(path) < 2:
-            # Add the start again — obstacle will just stay in place
+            
             nx, ny = start[0], start[1]
             for dx, dy in directions:
                 nx2, ny2 = start[0] + dx, start[1] + dy
@@ -420,34 +414,27 @@ class WarehouseEnv(gym.Env):
 
         return path
 
-    # ==================================================================
-    # POSITION SAMPLING
-    # ==================================================================
+    
 
     def _sample_unique_positions(self, n: int) -> List[Tuple[int, int]]:
-        """Sample n unique random positions on the grid."""
+        
         all_positions = [
             (x, y) for x in range(self.grid_size) for y in range(self.grid_size)
         ]
         return random.sample(all_positions, n)
 
     def _sample_free_position(self, occupied: set) -> Tuple[int, int]:
-        """Sample a single random position that isn't in the occupied set."""
+        
         while True:
             x = random.randint(0, self.grid_size - 1)
             y = random.randint(0, self.grid_size - 1)
             if (x, y) not in occupied:
                 return (x, y)
 
-    # ==================================================================
-    # STATE EXPORT (for Backend / WebSocket)
-    # ==================================================================
+    
 
     def get_state(self) -> Dict[str, Any]:
-        """
-        Export the full environment state as a JSON-serializable dict.
-        This is what BE calls after each step() to stream to FE via WebSocket.
-        """
+        
         return {
             "episode": self.curriculum.total_episodes,
             "step": self.current_step,
@@ -466,12 +453,9 @@ class WarehouseEnv(gym.Env):
             "delivery_pos": {"x": self.delivery_pos[0], "y": self.delivery_pos[1]} if hasattr(self, "delivery_pos") else {"x": 14, "y": 14},
         }
 
-    # ==================================================================
-    # RENDER (Terminal Debug)
-    # ==================================================================
+    
 
     def render(self):
-        """Print the grid to the terminal for debugging."""
         symbols = {
             "empty": "· ",
             "agent": "A ",
@@ -484,19 +468,18 @@ class WarehouseEnv(gym.Env):
 
         grid = [["· "] * self.grid_size for _ in range(self.grid_size)]
 
-        # Place obstacles
+        
         for obs in self.obstacles:
             for cell in obs.occupied_cells:
                 if 0 <= cell[0] < self.grid_size and 0 <= cell[1] < self.grid_size:
                     grid[cell[1]][cell[0]] = symbols.get(obs.type, "? ")
 
-        # Place goal
         grid[self.goal.y][self.goal.x] = symbols["goal"]
 
-        # Place agent (overwrites goal if on top)
+        
         grid[self.agent.y][self.agent.x] = symbols["agent"]
 
-        # Print
+        
         header = f"Stage {self.curriculum.current_stage} | Step {self.current_step} | Reward {self.episode_reward:.2f} | Dist {self._manhattan_distance()}"
         print(f"\n{'─' * (self.grid_size * 2 + 2)}")
         print(f" {header}")
@@ -505,9 +488,7 @@ class WarehouseEnv(gym.Env):
             print("|" + "".join(row) + "|")
         print(f"{'─' * (self.grid_size * 2 + 2)}")
 
-    # ==================================================================
-    # STRING REPR
-    # ==================================================================
+    
 
     def __repr__(self):
         return (

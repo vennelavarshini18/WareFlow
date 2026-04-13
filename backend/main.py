@@ -6,10 +6,8 @@ import os
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-# Add the root DevMatrixx folder to Python path so we can import the 'ml' module
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-# IMPORTANT: Add the ml folder directly so SB3 can unpickle the model properly
 ml_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ml"))
 if ml_dir not in sys.path:
     sys.path.insert(0, ml_dir)
@@ -27,7 +25,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Absolute path to the golden brain we baked overnight
 CHECKPOINT_PATH = os.path.abspath(
     os.path.join(
         os.path.dirname(__file__),
@@ -47,27 +44,46 @@ async def root():
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+    print("✅ WebSocket client connected!")
     
     try:
-        # Initialize the live AI runner using the real 15x15 environment
+        print("🔄 Initializing InferenceRunner...")
         runner = InferenceRunner(
             checkpoint_path=CHECKPOINT_PATH,
             grid_size=15,
             max_steps=200,
             use_real_env=True,
-            step_delay=0.1  # 100ms delay between JSON frames so the front-end has time to animate
+            step_delay=0.05 
         )
+        print("✅ InferenceRunner initialized!")
         
+        runner.env.curriculum.current_stage = 3
+        print(f"🎓 Forced environment to Stage {runner.env.curriculum.current_stage}")
+        
+        episode_count = 0
         while True:
-            # run_episode is an async generator that yields the get_state() JSON dict!
-            async for state in runner.run_episode():
-                await websocket.send_json(state)
+            try:
+                episode_count += 1
+                print(f"\n🎬 Episode {episode_count} starting...")
+               
+                step_count = 0
+                async for state in runner.run_episode():
+                    step_count += 1
+                    await websocket.send_json(state)
                 
-            # Quick pause before the AI starts a brand new episode
-            await asyncio.sleep(1.0)
+                print(f" Episode {episode_count} finished ({step_count} steps)")
+              
+                await asyncio.sleep(1.0)
+            except Exception as ep_error:
+                print(f" Error in episode {episode_count}: {ep_error}")
+                import traceback
+                traceback.print_exc()
+                break
             
     except WebSocketDisconnect:
         print("Frontend disconnected from WebSocket.")
     except Exception as e:
-        print(f"Error in WebSocket: {e}")
+        print(f" Critical error in WebSocket: {e}")
+        import traceback
+        traceback.print_exc()
 
