@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import WarehouseScene from './components/WarehouseScene'
 import HUD from './components/HUD'
+import CustomerForm from './components/CustomerForm'
 import useWarehouseSocket from './hooks/useWarehouseSocket'
 
 export default function App() {
+  const [currentView, setCurrentView] = useState('store') // 'store' or 'warehouse'
   const [speedMultiplier, setSpeedMultiplier] = useState(1)
   const { frameData, connectionStatus } = useWarehouseSocket('ws://localhost:8000/ws', speedMultiplier)
 
@@ -21,6 +23,10 @@ export default function App() {
       flashTimeout.current = setTimeout(() => setFlashColor(null), 600)
     }
   }, [frameData?.agent?.status])
+
+  if (currentView === 'store') {
+    return <CustomerForm onOrderPlaced={() => setCurrentView('warehouse')} />
+  }
 
   return (
     <div className="w-screen h-screen bg-black relative overflow-hidden">
