@@ -59,18 +59,28 @@ class Goal:
 class StaticObstacle:
     """A shelf or wall that never moves. Blocks a cell permanently."""
 
-    def __init__(self, obs_id: str, x: int, y: int):
+    def __init__(self, obs_id: str, x: int, y: int, w: int = 1, h: int = 1, category: Optional[str] = None):
         self.id = obs_id
         self.x = x
         self.y = y
+        self.w = w
+        self.h = h
         self.type = "static"
+        self.category = category  # e.g. "Skincare", "Grocery", etc.
+
+    @property
+    def occupied_cells(self) -> List[Tuple[int, int]]:
+        return [(self.x + dx, self.y + dy) for dx in range(self.w) for dy in range(self.h)]
 
     def update(self, step_count: int, grid_size: int, occupied: set):
         """Static obstacles don't move — no-op."""
         pass
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"id": self.id, "x": self.x, "y": self.y, "type": self.type}
+        d = {"id": self.id, "x": self.x, "y": self.y, "w": self.w, "h": self.h, "type": self.type}
+        if self.category:
+            d["category"] = self.category
+        return d
 
 
 class PatrolObstacle:
@@ -94,6 +104,10 @@ class PatrolObstacle:
         self.x = waypoints[0][0]
         self.y = waypoints[0][1]
         self.type = "patrol"
+
+    @property
+    def occupied_cells(self) -> List[Tuple[int, int]]:
+        return [(self.x, self.y)]
 
     def update(self, step_count: int, grid_size: int, occupied: set):
         """Move to the next waypoint in the patrol path."""
@@ -141,6 +155,10 @@ class RandomWalkObstacle:
         self.y = y
         self.type = "random_walk"
 
+    @property
+    def occupied_cells(self) -> List[Tuple[int, int]]:
+        return [(self.x, self.y)]
+
     def update(self, step_count: int, grid_size: int, occupied: set):
         """Move to a random neighboring cell (or stay in place)."""
         directions = [(0, -1), (0, 1), (-1, 0), (1, 0), (0, 0)]  # includes staying
@@ -182,6 +200,10 @@ class CompetingRobot:
         self.speed = max(1, speed)
         self.type = "competing_robot"
         self.reached_goal = False
+
+    @property
+    def occupied_cells(self) -> List[Tuple[int, int]]:
+        return [(self.x, self.y)]
 
     def update(self, step_count: int, grid_size: int, occupied: set):
         """Move one step closer to the goal using greedy Manhattan reduction."""

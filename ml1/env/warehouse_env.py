@@ -92,10 +92,12 @@ class WarehouseEnv(gym.Env):
         # Curriculum
         self.curriculum = CurriculumTracker(window_size=100, advance_threshold=0.90)
 
-        # Episode state
         self.current_step = 0
         self.episode_reward = 0.0
         self.prev_distance = 0
+        self.route_stage = "to_shelf"
+        self.target_category = ""
+        self.delivery_pos = (0, 0)
 
     # ==================================================================
     # RESET
@@ -109,13 +111,49 @@ class WarehouseEnv(gym.Env):
         self.episode_reward = 0.0
         self.agent.status = "moving"
 
-        # ── Spawn agent and goal at random non-overlapping positions ──
-        positions = self._sample_unique_positions(2)
-        self.agent.set_position(*positions[0])
-        self.goal.x, self.goal.y = positions[1]
-
         # ── Spawn obstacles based on current curriculum stage ─────────
-        self._spawn_obstacles()
+        if not self.obstacles:
+            self._spawn_obstacles()
+
+        # ── Setup 2-stage route: to shelf -> to delivery ──
+        occupied = set()
+        for obs in self.obstacles:
+            occupied.update(obs.occupied_cells)
+        
+        self.delivery_pos = (self.grid_size - 1, self.grid_size - 1)
+        if self.delivery_pos in occupied:
+            self.delivery_pos = self._sample_free_position(occupied)
+
+        shelves = [obs for obs in self.obstacles if getattr(obs, "category", None) is not None]
+        if shelves:
+            target_shelf = random.choice(shelves)
+            shelf_cells = target_shelf.occupied_cells
+            adjacent_cells = set()
+            for cx, cy in shelf_cells:
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    nx, ny = cx + dx, cy + dy
+                    if 0 <= nx < self.grid_size and 0 <= ny < self.grid_size:
+                        adjacent_cells.add((nx, ny))
+            
+            free_adjacent = list(adjacent_cells - occupied)
+            if not free_adjacent:
+                goal_pos = self._sample_free_position(occupied)
+            else:
+                goal_pos = random.choice(free_adjacent)
+            
+            self.target_category = target_shelf.category
+        else:
+            goal_pos = self._sample_free_position(occupied)
+            self.target_category = "Unknown"
+
+        self.goal.x, self.goal.y = goal_pos
+        self.route_stage = "to_shelf"
+        
+        if not getattr(self, "agent_spawned", False):
+            agent_pos = self._sample_free_position(occupied.union({goal_pos, self.delivery_pos}))
+            occupied.add(agent_pos)
+            self.agent.set_position(*agent_pos)
+            self.agent_spawned = True
 
         # ── Initial distance ─────────────────────────────────────────
         self.prev_distance = self._manhattan_distance()
@@ -154,7 +192,10 @@ class WarehouseEnv(gym.Env):
             # Agent doesn't move, stays in place
         else:
             # ── 3. Check obstacle collision ──────────────────────────
-            obstacle_positions = {(obs.x, obs.y) for obs in self.obstacles}
+            obstacle_positions = set()
+            for obs in self.obstacles:
+                obstacle_positions.update(obs.occupied_cells)
+            
             if (new_x, new_y) in obstacle_positions:
                 reward += self.REWARD_COLLISION
                 self.agent.status = "collided"
@@ -166,9 +207,17 @@ class WarehouseEnv(gym.Env):
 
                 # ── 5. Check goal reached ────────────────────────────
                 if self.agent.x == self.goal.x and self.agent.y == self.goal.y:
-                    reward += self.REWARD_GOAL
-                    self.agent.status = "reached_goal"
-                    terminated = True
+                    if self.route_stage == "to_shelf":
+                        # Stage 1 complete! Now deliver.
+                        reward += self.REWARD_GOAL / 2.0
+                        self.route_stage = "to_delivery"
+                        self.goal.x, self.goal.y = self.delivery_pos
+                        self.prev_distance = self._manhattan_distance()
+                    else:
+                        # Final destination complete
+                        reward += self.REWARD_GOAL
+                        self.agent.status = "reached_goal"
+                        terminated = True
 
         # ── 6. Dense reward: distance shaping ────────────────────────
         if not terminated:
@@ -185,7 +234,10 @@ class WarehouseEnv(gym.Env):
 
         # ── 9. Post-move collision check (obstacle walked into agent)
         if not terminated:
-            obstacle_positions_after = {(obs.x, obs.y) for obs in self.obstacles}
+            obstacle_positions_after = set()
+            for obs in self.obstacles:
+                obstacle_positions_after.update(obs.occupied_cells)
+                
             if (self.agent.x, self.agent.y) in obstacle_positions_after:
                 reward += self.REWARD_COLLISION
                 self.agent.status = "collided"
@@ -237,8 +289,9 @@ class WarehouseEnv(gym.Env):
 
         # Channel 0: Obstacles
         for obstacle in self.obstacles:
-            if 0 <= obstacle.x < self.grid_size and 0 <= obstacle.y < self.grid_size:
-                obs[0, obstacle.y, obstacle.x] = 255
+            for cell in obstacle.occupied_cells:
+                if 0 <= cell[0] < self.grid_size and 0 <= cell[1] < self.grid_size:
+                    obs[0, cell[1], cell[0]] = 255
 
         # Channel 1: Agent
         obs[1, self.agent.y, self.agent.x] = 255
@@ -277,48 +330,38 @@ class WarehouseEnv(gym.Env):
     # ==================================================================
 
     def _spawn_obstacles(self):
-        """Populate obstacles based on the current curriculum stage."""
+        """Populate the static warehouse shelf layout (always active)."""
         self.obstacles = []
 
-        if self.curriculum.current_stage == 1:
-            # Stage 1: Empty room — no obstacles
-            return
+        categories = [
+            "Skincare", "Grocery", "Footwear", "Clothes",
+            "Pharmacy", "Electronics", "Stationery", "Accessories"
+        ]
 
-        if self.curriculum.current_stage >= 2:
-            # Stage 2+: Mixed obstacles
-            occupied = {(self.agent.x, self.agent.y), (self.goal.x, self.goal.y)}
-
-            # Static obstacles
-            for i in range(self.STAGE2_STATIC):
-                pos = self._sample_free_position(occupied)
-                self.obstacles.append(StaticObstacle(f"s_{i}", pos[0], pos[1]))
-                occupied.add(pos)
-
-            # Patrol obstacles (each gets a 2-4 cell patrol path)
-            for i in range(self.STAGE2_PATROL):
-                start = self._sample_free_position(occupied)
-                occupied.add(start)
-                waypoints = self._generate_patrol_path(start, occupied)
-                self.obstacles.append(PatrolObstacle(f"p_{i}", waypoints, speed=2))
-
-            # Random walk obstacles
-            for i in range(self.STAGE2_RANDOM):
-                pos = self._sample_free_position(occupied)
-                self.obstacles.append(RandomWalkObstacle(f"r_{i}", pos[0], pos[1]))
-                occupied.add(pos)
-
-        if self.curriculum.current_stage >= 3:
-            # Stage 3: Add competing robots that race toward the goal
-            for i in range(self.STAGE3_COMPETITORS):
-                pos = self._sample_free_position(occupied)
-                self.obstacles.append(
-                    CompetingRobot(
-                        f"c_{i}", pos[0], pos[1],
-                        self.goal.x, self.goal.y,
-                        speed=3  # Slower than agent (moves every 3rd step)
-                    )
-                )
-                occupied.add(pos)
+        occupied_padded = set()
+        
+        for shelf_id, category in enumerate(categories):
+            while True:
+                # Randomize orientation
+                is_horizontal = random.choice([True, False])
+                if is_horizontal:
+                    w, h = 2, 1
+                    x = random.randint(1, self.grid_size - 3)
+                    y = random.randint(1, self.grid_size - 2)
+                else:
+                    w, h = 1, 2
+                    x = random.randint(1, self.grid_size - 2)
+                    y = random.randint(1, self.grid_size - 3)
+                    
+                # To prevent blocking paths entirely, check a padded footprint
+                # so shelves don't touch each other
+                padded_footprint = {(x + dx, y + dy) for dx in range(-1, w+1) for dy in range(-1, h+1)}
+                
+                # If these cells are free, place it!
+                if not occupied_padded.intersection(padded_footprint):
+                    occupied_padded.update(padded_footprint)
+                    self.obstacles.append(StaticObstacle(f"s_{shelf_id}", x, y, w=w, h=h, category=category))
+                    break
 
     def _update_obstacles(self):
         """Move all dynamic obstacles by one tick."""
@@ -329,7 +372,7 @@ class WarehouseEnv(gym.Env):
             occupied.add((self.goal.x, self.goal.y))
             for other in self.obstacles:
                 if other.id != obstacle.id:
-                    occupied.add((other.x, other.y))
+                    occupied.update(other.occupied_cells)
             obstacle.update(self.current_step, self.grid_size, occupied)
 
     def _generate_patrol_path(
@@ -418,6 +461,9 @@ class WarehouseEnv(gym.Env):
             },
             "stage": self.curriculum.current_stage,
             "done": self.agent.status in ("collided", "reached_goal", "goal_stolen"),
+            "route_stage": getattr(self, "route_stage", "to_shelf"),
+            "target_category": getattr(self, "target_category", ""),
+            "delivery_pos": {"x": self.delivery_pos[0], "y": self.delivery_pos[1]} if hasattr(self, "delivery_pos") else {"x": 14, "y": 14},
         }
 
     # ==================================================================
@@ -440,8 +486,9 @@ class WarehouseEnv(gym.Env):
 
         # Place obstacles
         for obs in self.obstacles:
-            if 0 <= obs.x < self.grid_size and 0 <= obs.y < self.grid_size:
-                grid[obs.y][obs.x] = symbols.get(obs.type, "? ")
+            for cell in obs.occupied_cells:
+                if 0 <= cell[0] < self.grid_size and 0 <= cell[1] < self.grid_size:
+                    grid[cell[1]][cell[0]] = symbols.get(obs.type, "? ")
 
         # Place goal
         grid[self.goal.y][self.goal.x] = symbols["goal"]
