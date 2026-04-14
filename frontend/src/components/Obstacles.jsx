@@ -44,7 +44,7 @@ function ShelfSegment({ x, y }) {
   const hasTopBox = useMemo(() => (x + y) % 3 !== 0, [x, y])
 
   return (
-    <group position={[x * SCALE, 0, y * SCALE]}>
+    <group position={[x * SCALE, 0, y * SCALE]} scale={1.5}>
       {/* ── UPRIGHTS (2 tall steel frames) ── */}
       {[-SCALE * 0.4, SCALE * 0.4].map((xo, i) => (
         <mesh
@@ -53,14 +53,14 @@ function ShelfSegment({ x, y }) {
           castShadow
         >
           <boxGeometry args={[0.4, 10, 0.4]} />
-          <meshStandardMaterial color="#8B8B8B" roughness={0.5} metalness={0.6} />
+          <meshStandardMaterial color="#1a1a1a" roughness={0.5} metalness={0.8} />
         </mesh>
       ))}
 
       {/* Back bracing (diagonal — simplified as vertical) */}
       <mesh position={[0, 5, -SCALE * 0.35]} castShadow>
         <boxGeometry args={[0.15, 10, 0.15]} />
-        <meshStandardMaterial color="#7a7a7a" roughness={0.6} metalness={0.5} />
+        <meshStandardMaterial color="#1f1f1f" roughness={0.6} metalness={0.7} />
       </mesh>
 
       {/* ── SHELF BOARDS (3 levels) ── */}
@@ -72,7 +72,7 @@ function ShelfSegment({ x, y }) {
           receiveShadow
         >
           <boxGeometry args={[SCALE, 0.3, SCALE * 0.8]} />
-          <meshStandardMaterial color="#6B6B6B" roughness={0.6} metalness={0.5} />
+          <meshStandardMaterial color="#2c2c2c" roughness={0.6} metalness={0.6} />
         </mesh>
       ))}
 

@@ -4,66 +4,82 @@ const CATEGORIES = [
   { 
     id: 'grocery', 
     name: 'Grocery', 
-    icon: '🛒', 
+    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=600', 
     items: ['Milk', 'Eggs', 'Chocolates', 'Detergent', 'Flour', 'Bread'],
-    color: 'from-yellow-600 to-yellow-700',
-    hover: 'shadow-yellow-500/20'
+    neon: 'hover:shadow-[0_0_15px_rgba(0,255,255,0.4)] hover:border-cyan-400',
+    textNeon: 'group-hover:text-cyan-400',
+    btnNeon: 'hover:border-cyan-400 hover:bg-cyan-900/30 hover:text-cyan-300',
+    bgNeon: 'bg-cyan-500'
   },
   { 
     id: 'electronics', 
     name: 'Electronics', 
-    icon: '🔌', 
+    image: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=600', 
     items: ['Laptop', 'Smartwatch', 'Headphones', 'Cables'],
-    color: 'from-blue-600 to-blue-700',
-    hover: 'shadow-blue-500/20'
+    neon: 'hover:shadow-[0_0_15px_rgba(138,43,226,0.4)] hover:border-purple-500',
+    textNeon: 'group-hover:text-purple-400',
+    btnNeon: 'hover:border-purple-500 hover:bg-purple-900/30 hover:text-purple-300',
+    bgNeon: 'bg-purple-500'
   },
   { 
     id: 'pharmacy', 
     name: 'Pharmacy', 
-    icon: '💊', 
+    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=600', 
     items: ['Vitamins', 'Painkillers', 'First Aid', 'Masks'],
-    color: 'from-teal-600 to-teal-700',
-    hover: 'shadow-teal-500/20'
+    neon: 'hover:shadow-[0_0_15px_rgba(57,255,20,0.4)] hover:border-green-400',
+    textNeon: 'group-hover:text-green-400',
+    btnNeon: 'hover:border-green-400 hover:bg-green-900/30 hover:text-green-300',
+    bgNeon: 'bg-green-500'
   },
   { 
     id: 'skincare', 
     name: 'Skincare', 
-    icon: '✨', 
+    image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=600', 
     items: ['Face Cream', 'Sunscreen', 'Serum', 'Lotion'],
-    color: 'from-pink-600 to-pink-700',
-    hover: 'shadow-pink-500/20'
+    neon: 'hover:shadow-[0_0_15px_rgba(255,0,255,0.4)] hover:border-fuchsia-500',
+    textNeon: 'group-hover:text-fuchsia-400',
+    btnNeon: 'hover:border-fuchsia-500 hover:bg-fuchsia-900/30 hover:text-fuchsia-300',
+    bgNeon: 'bg-fuchsia-500'
   },
   { 
     id: 'footwear', 
     name: 'Footwear', 
-    icon: '👟', 
+    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=600', 
     items: ['Sneakers', 'Boots', 'Sandals', 'Socks'],
-    color: 'from-orange-600 to-orange-700',
-    hover: 'shadow-orange-500/20'
+    neon: 'hover:shadow-[0_0_15px_rgba(255,69,0,0.4)] hover:border-orange-500',
+    textNeon: 'group-hover:text-orange-400',
+    btnNeon: 'hover:border-orange-500 hover:bg-orange-900/30 hover:text-orange-300',
+    bgNeon: 'bg-orange-500'
   },
   { 
     id: 'clothes', 
     name: 'Clothes', 
-    icon: '👕', 
+    image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&q=80&w=600', 
     items: ['T-Shirt', 'Jeans', 'Jacket', 'Sweater'],
-    color: 'from-emerald-600 to-emerald-700',
-    hover: 'shadow-emerald-500/20'
+    neon: 'hover:shadow-[0_0_15px_rgba(255,255,0,0.4)] hover:border-yellow-400',
+    textNeon: 'group-hover:text-yellow-400',
+    btnNeon: 'hover:border-yellow-400 hover:bg-yellow-900/30 hover:text-yellow-300',
+    bgNeon: 'bg-yellow-500'
   },
   { 
     id: 'stationery', 
     name: 'Stationery', 
-    icon: '📓', 
+    image: 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&q=80&w=600', 
     items: ['Notebook', 'Pens', 'Markers', 'Stapler'],
-    color: 'from-indigo-600 to-indigo-700',
-    hover: 'shadow-indigo-500/20'
+    neon: 'hover:shadow-[0_0_15px_rgba(65,105,225,0.4)] hover:border-blue-500',
+    textNeon: 'group-hover:text-blue-400',
+    btnNeon: 'hover:border-blue-500 hover:bg-blue-900/30 hover:text-blue-300',
+    bgNeon: 'bg-blue-500'
   },
   { 
     id: 'accessories', 
     name: 'Accessories', 
-    icon: '⌚', 
+    image: 'https://images.unsplash.com/photo-1523206489230-c012c64b2b48?auto=format&fit=crop&q=80&w=600', 
     items: ['Watch', 'Sunglasses', 'Belt', 'Wallet'],
-    color: 'from-slate-600 to-slate-700',
-    hover: 'shadow-slate-500/20'
+    neon: 'hover:shadow-[0_0_15px_rgba(200,200,200,0.4)] hover:border-gray-300',
+    textNeon: 'group-hover:text-gray-300',
+    btnNeon: 'hover:border-gray-300 hover:bg-gray-800/50 hover:text-gray-200',
+    bgNeon: 'bg-gray-400'
   }
 ];
 
@@ -89,7 +105,7 @@ export default function NexusStorefront({ onOrderPlaced }) {
         body: JSON.stringify({ category: categoryId, item: itemName })
       });
       if (res.ok) {
-        onOrderPlaced(); // Navigate back or show success
+        if(onOrderPlaced) onOrderPlaced();
       } else {
         const errorData = await res.json();
         alert(`Failed: ${errorData.error}`);
@@ -97,54 +113,95 @@ export default function NexusStorefront({ onOrderPlaced }) {
     } catch (err) { alert("Network Error"); }
   };
 
-  if (loading) return <div className="w-screen h-screen flex justify-center items-center bg-gray-950 font-mono text-cyan-400 text-xl tracking-widest uppercase text-center mt-20">CONNECTING TO WAREHOUSE...</div>;
+  if (loading) return (
+    <div className="w-screen h-screen flex justify-center items-center bg-[#030303] font-mono text-cyan-400 text-sm tracking-[0.3em] uppercase text-center">
+      <div className="animate-pulse">INITIALIZING SECURE LINK...</div>
+    </div>
+  );
 
   return (
-    <div className="w-screen min-h-screen bg-gray-950 text-white overflow-y-auto overflow-x-hidden font-sans p-8">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-12 text-center">
-          <h1 className="text-5xl font-black bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-4">NEXUS STOREFRONT</h1>
-          <p className="text-gray-400 uppercase tracking-widest text-sm">Autonomous Category-Based Fulfillment</p>
+    <div className="w-screen min-h-screen bg-[#050505] text-gray-300 overflow-y-auto overflow-x-hidden font-sans p-8 selection:bg-cyan-900 selection:text-cyan-100">
+      
+      {/* Background vignette wrapper to simulate dark warehouse alley */}
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[#000000d0] to-[#000000] z-0"></div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        <header className="mb-16 mt-8 flex flex-col items-center border-b border-gray-800/50 pb-8">
+          <div className="h-[1px] w-48 bg-gradient-to-r from-transparent via-cyan-500 to-transparent mb-6 opacity-30"></div>
+          <h1 className="text-4xl font-light tracking-[0.2em] text-gray-300 mb-2 uppercase underline decoration-wavy decoration-cyan-500/40 underline-offset-[12px]" style={{textShadow: "0 0 20px rgba(0, 255, 255, 0.2)"}}>
+            STORE <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">FRONT</span>
+          </h1>
+          <p className="text-[#646464] uppercase tracking-[0.3em] text-[0.65rem] font-mono">
+            Autonomous Fulfillment Routing
+          </p>
+          <div className="h-[1px] w-48 bg-gradient-to-r from-transparent via-purple-500 to-transparent mt-6 opacity-30"></div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {CATEGORIES.map((cat) => {
             const stock = inventory[cat.id] || 0;
             const inStock = stock > 0;
 
             return (
-              <div key={cat.id} className={`bg-gray-900 border ${inStock ? 'border-gray-800' : 'border-red-900/50'} rounded-3xl p-6 shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group`}>
-                <div className="flex justify-between items-start mb-6">
-                  <span className="text-5xl group-hover:scale-110 transition-transform duration-300 ease-out">{cat.icon}</span>
-                  <div className="text-right">
-                    <span className={`text-xs font-bold px-2 py-1 rounded tracking-widest ${inStock ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-500'}`}>
-                      {inStock ? `${stock} UNITS` : 'OUT OF STOCK'}
-                    </span>
-                    <h3 className="text-2xl font-bold mt-3 text-gray-100">{cat.name}</h3>
+              <div 
+                key={cat.id} 
+                className={`group relative overflow-hidden bg-[#0a0a0a] border ${inStock ? 'border-[#1a1a1a]' : 'border-red-900/30'} 
+                  rounded-xl transition-all duration-500 ${inStock ? cat.neon : ''}`}
+              >
+                {/* Background Image with Neon Color Overlay */}
+                <div 
+                  className="absolute inset-0 z-0 opacity-40 group-hover:opacity-60 transition-opacity duration-700 blur-[2px] group-hover:blur-0"
+                  style={{ backgroundImage: `url(${cat.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+                ></div>
+                {/* 50% blend of exact neon color */}
+                <div className={`absolute inset-0 z-0 opacity-50 mix-blend-color ${inStock ? cat.bgNeon : 'bg-gray-800'}`}></div>
+                <div className="absolute inset-0 z-[1] bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/70 to-[#0a0a0a]/20"></div>
+
+                <div className="relative z-10 p-6 h-full flex flex-col">
+                  
+                  {/* Header Row */}
+                  <div className="flex justify-between items-end mb-8 border-b border-gray-800/50 pb-4">
+                    <h3 className={`text-xl font-light tracking-[0.1em] uppercase text-gray-200 transition-colors duration-300 ${inStock ? cat.textNeon : ''}`}>
+                      {cat.name}
+                    </h3>
+                    
+                    {/* Status Badge */}
+                    <div className="flex flex-col items-end">
+                      {inStock ? (
+                        <>
+                          <span className="text-[0.55rem] tracking-[0.2em] font-mono text-gray-500 uppercase">Reserves</span>
+                          <span className="text-sm font-light text-gray-300">{stock.toString().padStart(3, '0')}</span>
+                        </>
+                      ) : (
+                        <span className="text-[0.6rem] tracking-[0.15em] font-mono text-red-500/80 border border-red-500/30 px-2 py-0.5 rounded uppercase">
+                          Depleted
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Sub-items Grid */}
-                <div className="grid grid-cols-2 gap-2 mb-6">
-                  {cat.items.map(item => (
-                    <button
-                      key={item}
-                      disabled={!inStock}
-                      onClick={() => placeOrder(cat.id, item)}
-                      className={`text-xs text-left px-3 py-2 rounded-xl border font-bold transition-all truncate
-                        ${inStock 
-                          ? 'border-gray-800 hover:border-cyan-500 hover:bg-gray-800 text-gray-400 hover:text-white hover:shadow-[0_0_10px_rgba(56,189,248,0.3)] cursor-pointer' 
-                          : 'border-transparent text-gray-700 bg-gray-900/50 cursor-not-allowed'}`}
-                      title={item}
-                    >
-                      <span className="text-gray-500 mr-2">+</span>
-                      {item}
-                    </button>
-                  ))}
-                </div>
+                  {/* Items list */}
+                  <div className="flex flex-col gap-2 flex-grow">
+                    {cat.items.map(item => (
+                      <button
+                        key={item}
+                        disabled={!inStock}
+                        onClick={() => placeOrder(cat.id, item)}
+                        className={`text-xs text-left px-4 py-2.5 rounded border transition-all tracking-[0.05em] flex justify-between items-center group/btn
+                          ${inStock 
+                            ? `border-gray-800/80 bg-black/40 text-gray-400 cursor-pointer ${cat.btnNeon}` 
+                            : 'border-transparent text-gray-700 bg-black/20 cursor-not-allowed'}`}
+                      >
+                        <span className="font-light">{item}</span>
+                        {inStock && (
+                          <span className="opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300 text-[0.6rem] font-mono tracking-widest">
+                            [ DISPATCH ]
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
 
-                <div className="text-xs text-gray-500 font-mono italic text-center w-full px-2">
-                  {inStock ? `Click an item to dispatch robot` : 'Category replenishment required'}
                 </div>
               </div>
             );
