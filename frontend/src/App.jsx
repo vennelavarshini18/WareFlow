@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
+import LandingPage from './components/LandingPage'
 import WarehouseScene from './components/WarehouseScene'
 import HUD from './components/HUD'
 import CustomerForm from './components/CustomerForm'
 import useWarehouseSocket from './hooks/useWarehouseSocket'
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('store') // 'store' or 'warehouse'
+  const [currentView, setCurrentView] = useState('landing') // 'landing', 'store' or 'warehouse'
   const [speedMultiplier, setSpeedMultiplier] = useState(1)
   const { frameData, connectionStatus } = useWarehouseSocket('ws://localhost:8000/ws', speedMultiplier)
 
@@ -23,6 +24,10 @@ export default function App() {
       flashTimeout.current = setTimeout(() => setFlashColor(null), 600)
     }
   }, [frameData?.agent?.status])
+
+  if (currentView === 'landing') {
+    return <LandingPage onGetStarted={() => setCurrentView('store')} />
+  }
 
   if (currentView === 'store') {
     return <CustomerForm onOrderPlaced={() => setCurrentView('warehouse')} />
