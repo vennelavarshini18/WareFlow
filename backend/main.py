@@ -190,7 +190,8 @@ async def orchestrator_loop():
                 action = runner.predict(obs)
                 obs, reward, terminated, truncated, info = runner.env.step(action)
                 
-                if runner.env.agent.x == 0 and runner.env.agent.y == 0:
+                # Any position near the start counts as delivered
+                if runner.env.agent.x <= 2 and runner.env.agent.y <= 2:
                     done = True
                     
                 if runner.env.agent.status in ("collided", "blocked", "goal_stolen"):
