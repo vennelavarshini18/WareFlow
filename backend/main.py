@@ -36,25 +36,25 @@ CHECKPOINT_PATH = os.path.abspath(
 
 # --- SINGLE SOURCE OF TRUTH (IN-MEMORY) ---
 SHELF_LOCATIONS = {
-    "face_cream": {"x": 2, "y": 3, "section": "Skincare"},
-    "coffee": {"x": 7, "y": 3, "section": "Grocery"},
-    "sneakers": {"x": 11, "y": 3, "section": "Footwear"},
-    "tshirt": {"x": 2, "y": 8, "section": "Clothes"},
-    "vitamins": {"x": 7, "y": 8, "section": "Pharmacy"},
-    "laptop": {"x": 11, "y": 8, "section": "Electronics"},
-    "notebook": {"x": 4, "y": 12, "section": "Stationery"},
-    "smartwatch": {"x": 9, "y": 12, "section": "Accessories"}
+    "skincare": {"x": 2, "y": 3, "section": "Skincare"},
+    "grocery": {"x": 7, "y": 3, "section": "Grocery"},
+    "footwear": {"x": 11, "y": 3, "section": "Footwear"},
+    "clothes": {"x": 2, "y": 8, "section": "Clothes"},
+    "pharmacy": {"x": 7, "y": 8, "section": "Pharmacy"},
+    "electronics": {"x": 11, "y": 8, "section": "Electronics"},
+    "stationery": {"x": 4, "y": 12, "section": "Stationery"},
+    "accessories": {"x": 9, "y": 12, "section": "Accessories"}
 }
 
 inventory = {
-    "face_cream": 15,
-    "coffee": 20,
-    "sneakers": 5,
-    "tshirt": 12,
-    "vitamins": 30,
-    "laptop": 3,
-    "notebook": 40,
-    "smartwatch": 10
+    "skincare": 15,
+    "grocery": 20,
+    "footwear": 5,
+    "clothes": 12,
+    "pharmacy": 30,
+    "electronics": 3,
+    "stationery": 40,
+    "accessories": 10
 }
 
 order_queue = [] 
@@ -67,6 +67,7 @@ robot_state = {
 }
 
 class OrderRequest(BaseModel):
+    category: str
     item: str
 
 active_connections: List[WebSocket] = []
@@ -117,8 +118,8 @@ async def orchestrator_loop():
     
     while True:
         if robot_state["status"] == "idle" and len(order_queue) > 0:
-            item = order_queue.pop(0)
-            target = SHELF_LOCATIONS.get(item)
+            order_data = order_queue.pop(0)
+            target = SHELF_LOCATIONS.get(order_data["category"])
             
             if not target:
                 continue
@@ -170,7 +171,7 @@ async def orchestrator_loop():
                 continue
 
             # Simulate picking up
-            robot_state["carrying"] = item
+            robot_state["carrying"] = order_data["item"]
             await send_broadcast()
             await asyncio.sleep(0.5)
             
@@ -205,8 +206,9 @@ async def orchestrator_loop():
             if done:
                 # 3. DELIVERED
                 # Update single source of truth
-                if inventory[item] > 0:
-                    inventory[item] -= 1
+                cat_id = order_data["category"]
+                if inventory[cat_id] > 0:
+                    inventory[cat_id] -= 1
                 robot_state["carrying"] = None
                 robot_state["status"] = "delivered"
                 await send_broadcast()
@@ -231,12 +233,12 @@ async def get_inventory():
 
 @app.post("/api/order")
 async def place_order(order: OrderRequest):
-    if order.item not in inventory:
-        return {"error": "Item not found"}
-    if inventory[order.item] <= 0:
-        return {"error": "Item out of stock"}
+    if order.category not in inventory:
+        return {"error": "Category not found"}
+    if inventory[order.category] <= 0:
+        return {"error": "Category out of stock"}
         
-    order_queue.append(order.item)
+    order_queue.append({"category": order.category, "item": order.item})
     return {"status": "success", "queue_position": len(order_queue)}
 
 @app.websocket("/ws")
